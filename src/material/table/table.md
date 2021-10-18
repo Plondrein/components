@@ -124,6 +124,21 @@ functionality by extending a different base class, the `DataSource` base class c
 implemented instead (`MyCustomDataSource extends SomeOtherBaseClass implements DataSource`) to
 respect Typescript's restriction to only implement one base class.
 
+### Styling Columns
+
+Each table cell has an automatically generated class based on which column it appears in. The format for this
+generated class is `mat-column-NAME`. For example, cells in a column named "symbol" can be targeted with the
+selector `.mat-column-symbol`.
+
+<!-- example(table-column-styling) -->
+
+### Row Templates
+
+Event handlers and property binding on the row templates will be applied to each row rendered by the table. For example,
+adding a `(click)` handler to the row template will cause each individual row to call the handler when clicked.
+
+<!-- example(table-row-binding) -->
+
 ### Features
 
 The `MatTable` is focused on a single responsibility: efficiently render rows of data in a
@@ -361,13 +376,15 @@ to resolve this.
 When using the `multiTemplateDataRows` directive to support multiple rows for each data object, the context of `*matRowDef` is the same except that the `index` value is replaced by `dataIndex` and `renderIndex`.
 
 ### Accessibility
-Tables without text or labels should be given a meaningful label via `aria-label` or
-`aria-labelledby`. The `aria-readonly` defaults to `true` if it's not set.
 
-Table's default role is `grid`, and it can be changed to `treegrid` through `role` attribute.
+By default, `MatTable` applies `role="table"`, assuming the table's contains primarily static
+content. You can change the role by explicitly setting `role="grid"` or `role="treegrid"` on the
+table element. While changing the role will update child element roles, such as changing
+`role="cell"` to `role="gridcell"`, this does _not_ apply additional keyboard input handling or
+focus management to the table.
 
-`mat-table` does not manage any focus/keyboard interaction on its own. Users can add desired
-focus/keyboard interactions in their application.
+Always provide an accessible label for your tables via `aria-label` or `aria-labelledby` on the
+table element.
 
 ### Tables with `display: flex`
 
@@ -406,3 +423,15 @@ selectors. For example, `<table mat-table>` becomes `<mat-table>`; `<tr mat-row>
 
 Note that this approach means you cannot include certain native-table features such colspan/rowspan
 or have columns that resize themselves based on their content.
+
+### Tables with `MatRipple`
+
+By default, `MatTable` does not set up Material Design ripples for rows. A ripple effect can be
+added to table rows by using the `MatRipple` directive from `@angular/material/core`. Due to
+limitations in browsers, ripples cannot be applied native `th` or `tr` elements. The recommended
+approach for setting up ripples is using the non-native `display: flex` variant of `MatTable`.
+
+<!--- example(table-with-ripples) -->
+
+More details about ripples on native table rows and their limitations can be found [in this issue](https://github.com/angular/components/issues/11883#issuecomment-634942981).
+

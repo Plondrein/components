@@ -35,7 +35,7 @@ import {Toggler, MENU_AIM, MenuAim} from './menu-aim';
 /** Removes all icons from within the given element. */
 function removeIcons(element: Element) {
   for (const icon of Array.from(element.querySelectorAll('mat-icon, .material-icons'))) {
-    icon.parentNode?.removeChild(icon);
+    icon.remove();
   }
 }
 
@@ -90,7 +90,7 @@ export class CdkMenuItem implements FocusableOption, FocusableElement, Toggler, 
     /** Reference to the CdkMenuItemTrigger directive if one is added to the same element */
     // `CdkMenuItem` is commonly used in combination with a `CdkMenuItemTrigger`.
     // tslint:disable-next-line: lightweight-tokens
-    @Self() @Optional() private readonly _menuTrigger?: CdkMenuItemTrigger
+    @Self() @Optional() private readonly _menuTrigger?: CdkMenuItemTrigger,
   ) {
     this._setupMouseEnter();
 
@@ -244,7 +244,7 @@ export class CdkMenuItem implements FocusableOption, FocusableElement, Toggler, 
         fromEvent(this._elementRef.nativeElement, 'mouseenter')
           .pipe(
             filter(() => !this._getMenuStack()?.isEmpty() && !this.hasMenu()),
-            takeUntil(this._destroyed)
+            takeUntil(this._destroyed),
           )
           .subscribe(() => {
             if (this._menuAim) {
@@ -252,7 +252,7 @@ export class CdkMenuItem implements FocusableOption, FocusableElement, Toggler, 
             } else {
               closeOpenSiblings();
             }
-          })
+          }),
       );
     }
   }

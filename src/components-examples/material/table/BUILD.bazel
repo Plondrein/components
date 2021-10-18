@@ -12,7 +12,6 @@ ng_module(
         "**/*.html",
         "**/*.css",
     ]),
-    module_name = "@angular/components-examples/material/table",
     deps = [
         "//src/cdk/drag-drop",
         "//src/cdk/table",
@@ -21,6 +20,7 @@ ng_module(
         "//src/material/button",
         "//src/material/button-toggle",
         "//src/material/checkbox",
+        "//src/material/core",
         "//src/material/icon",
         "//src/material/input",
         "//src/material/paginator",

@@ -15,13 +15,15 @@ describe('TooltipHarnessExample', () => {
   let loader: HarnessLoader;
 
   beforeAll(() => {
-    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
+    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), {
+      teardown: {destroyAfterEach: true},
+    });
   });
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MatTooltipModule, NoopAnimationsModule],
-      declarations: [TooltipHarnessExample]
+      declarations: [TooltipHarnessExample],
     }).compileComponents();
     fixture = TestBed.createComponent(TooltipHarnessExample);
     fixture.detectChanges();

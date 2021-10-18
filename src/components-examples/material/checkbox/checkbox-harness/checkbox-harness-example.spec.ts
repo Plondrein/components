@@ -15,13 +15,15 @@ describe('CheckboxHarnessExample', () => {
   let loader: HarnessLoader;
 
   beforeAll(() => {
-    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
+    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), {
+      teardown: {destroyAfterEach: true},
+    });
   });
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MatCheckboxModule, ReactiveFormsModule],
-      declarations: [CheckboxHarnessExample]
+      declarations: [CheckboxHarnessExample],
     }).compileComponents();
     fixture = TestBed.createComponent(CheckboxHarnessExample);
     fixture.detectChanges();

@@ -15,13 +15,15 @@ describe('ToolbarHarnessExample', () => {
   let loader: HarnessLoader;
 
   beforeAll(() => {
-    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
+    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), {
+      teardown: {destroyAfterEach: true},
+    });
   });
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MatToolbarModule, MatIconModule],
-      declarations: [ToolbarHarnessExample]
+      declarations: [ToolbarHarnessExample],
     }).compileComponents();
     fixture = TestBed.createComponent(ToolbarHarnessExample);
     fixture.detectChanges();
@@ -52,9 +54,6 @@ describe('ToolbarHarnessExample', () => {
     const toolbars = await loader.getAllHarnesses(MatToolbarHarness);
 
     expect(await toolbars[0].getRowsAsText()).toEqual(['My App']);
-    expect(await toolbars[1].getRowsAsText()).toEqual([
-      'Row 1',
-      'Row 2 Button 1  Button 2'
-    ]);
+    expect(await toolbars[1].getRowsAsText()).toEqual(['Row 1', 'Row 2 Button 1  Button 2']);
   });
 });

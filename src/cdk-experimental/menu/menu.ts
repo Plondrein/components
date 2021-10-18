@@ -115,7 +115,7 @@ export class CdkMenu extends CdkMenuGroup implements Menu, AfterContentInit, OnI
     @Optional() private readonly _dir?: Directionality,
     // `CdkMenuPanel` is always used in combination with a `CdkMenu`.
     // tslint:disable-next-line: lightweight-tokens
-    @Optional() private readonly _menuPanel?: CdkMenuPanel
+    @Optional() private readonly _menuPanel?: CdkMenuPanel,
   ) {
     super();
   }
@@ -124,7 +124,7 @@ export class CdkMenu extends CdkMenuGroup implements Menu, AfterContentInit, OnI
     this._registerWithParentPanel();
   }
 
-  ngAfterContentInit() {
+  override ngAfterContentInit() {
     super.ngAfterContentInit();
 
     this._completeChangeEmitter();
@@ -321,14 +321,14 @@ export class CdkMenu extends CdkMenuGroup implements Menu, AfterContentInit, OnI
         mergeMap((list: QueryList<CdkMenuItem>) =>
           list
             .filter(item => item.hasMenu())
-            .map(item => item.getMenuTrigger()!.opened.pipe(mapTo(item), takeUntil(exitCondition)))
+            .map(item => item.getMenuTrigger()!.opened.pipe(mapTo(item), takeUntil(exitCondition))),
         ),
         mergeAll(),
         switchMap((item: CdkMenuItem) => {
           this._openItem = item;
           return item.getMenuTrigger()!.closed;
         }),
-        takeUntil(this.closed)
+        takeUntil(this.closed),
       )
       .subscribe(() => (this._openItem = undefined));
   }
@@ -348,7 +348,7 @@ export class CdkMenu extends CdkMenuGroup implements Menu, AfterContentInit, OnI
     return this._menuStack instanceof NoopMenuStack;
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
     this._emitClosedEvent();
     this._pointerTracker?.destroy();
   }

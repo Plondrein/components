@@ -14,13 +14,15 @@ describe('ButtonToggleHarnessExample', () => {
   let loader: HarnessLoader;
 
   beforeAll(() => {
-    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
+    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), {
+      teardown: {destroyAfterEach: true},
+    });
   });
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MatButtonToggleModule],
-      declarations: [ButtonToggleHarnessExample]
+      declarations: [ButtonToggleHarnessExample],
     }).compileComponents();
     fixture = TestBed.createComponent(ButtonToggleHarnessExample);
     fixture.detectChanges();

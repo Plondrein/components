@@ -12,7 +12,7 @@ import {
   BooleanInput,
   coerceBooleanProperty,
   coerceNumberProperty,
-  NumberInput
+  NumberInput,
 } from '@angular/cdk/coercion';
 import {ENTER, hasModifierKey, SPACE} from '@angular/cdk/keycodes';
 import {DOCUMENT} from '@angular/common';
@@ -40,6 +40,7 @@ import {
   ViewEncapsulation,
   AfterContentInit,
 } from '@angular/core';
+import {_getFocusedElementPierceShadowDom} from '@angular/cdk/platform';
 import {Observable, of as observableOf, Subject} from 'rxjs';
 import {startWith, takeUntil} from 'rxjs/operators';
 
@@ -53,10 +54,10 @@ let nextId = 0;
  * Position state of the content of each step in stepper that is used for transitioning
  * the content into correct position upon step selection change.
  */
-export type StepContentPositionState = 'previous'|'current'|'next';
+export type StepContentPositionState = 'previous' | 'current' | 'next';
 
 /** Possible orientation of a stepper. */
-export type StepperOrientation = 'horizontal'|'vertical';
+export type StepperOrientation = 'horizontal' | 'vertical';
 
 /** Change event emitted on selection changes. */
 export class StepperSelectionEvent {
@@ -74,14 +75,14 @@ export class StepperSelectionEvent {
 }
 
 /** The state of each step. */
-export type StepState = 'number'|'edit'|'done'|'error'|string;
+export type StepState = 'number' | 'edit' | 'done' | 'error' | string;
 
 /** Enum to represent the different states of the steps. */
 export const STEP_STATE = {
   NUMBER: 'number',
   EDIT: 'edit',
   DONE: 'done',
-  ERROR: 'error'
+  ERROR: 'error',
 };
 
 /** InjectionToken that can be used to specify the global stepper options. */
@@ -176,7 +177,7 @@ export class CdkStep implements OnChanges {
   set completed(value: boolean) {
     this._completedOverride = coerceBooleanProperty(value);
   }
-  _completedOverride: boolean|null = null;
+  _completedOverride: boolean | null = null;
 
   private _getDefaultCompleted() {
     return this.stepControl ? this.stepControl.valid && this.interacted : this.interacted;
@@ -190,15 +191,16 @@ export class CdkStep implements OnChanges {
   set hasError(value: boolean) {
     this._customError = coerceBooleanProperty(value);
   }
-  private _customError: boolean|null = null;
+  private _customError: boolean | null = null;
 
   private _getDefaultError() {
     return this.stepControl && this.stepControl.invalid && this.interacted;
   }
 
   constructor(
-      @Inject(forwardRef(() => CdkStepper)) public _stepper: CdkStepper,
-      @Optional() @Inject(STEPPER_GLOBAL_OPTIONS) stepperOptions?: StepperOptions) {
+    @Inject(forwardRef(() => CdkStepper)) public _stepper: CdkStepper,
+    @Optional() @Inject(STEPPER_GLOBAL_OPTIONS) stepperOptions?: StepperOptions,
+  ) {
     this._stepperOptions = stepperOptions ? stepperOptions : {};
     this._displayDefaultIndicatorType = this._stepperOptions.displayDefaultIndicatorType !== false;
   }
@@ -262,8 +264,6 @@ export class CdkStepper implements AfterContentInit, AfterViewInit, OnDestroy {
   /** Used for managing keyboard focus. */
   private _keyManager: FocusKeyManager<FocusableOption>;
 
-  private _document: Document;
-
   /** Full list of steps inside the stepper, including inside nested steppers. */
   @ContentChildren(CdkStep, {descendants: true}) _steps: QueryList<CdkStep>;
 
@@ -272,6 +272,9 @@ export class CdkStepper implements AfterContentInit, AfterViewInit, OnDestroy {
 
   /** The list of step headers of the steps in the stepper. */
   @ContentChildren(CdkStepHeader, {descendants: true}) _stepHeader: QueryList<CdkStepHeader>;
+
+  /** List of step headers sorted based on their DOM order. */
+  private _sortedHeaders = new QueryList<CdkStepHeader>();
 
   /** Whether the validity of previous steps should be checked or not. */
   @Input()
@@ -299,8 +302,11 @@ export class CdkStepper implements AfterContentInit, AfterViewInit, OnDestroy {
 
       this.selected?._markAsInteracted();
 
-      if (this._selectedIndex !== newIndex && !this._anyControlsInvalidOrPending(newIndex) &&
-          (newIndex >= this._selectedIndex || this.steps.toArray()[newIndex].editable)) {
+      if (
+        this._selectedIndex !== newIndex &&
+        !this._anyControlsInvalidOrPending(newIndex) &&
+        (newIndex >= this._selectedIndex || this.steps.toArray()[newIndex].editable)
+      ) {
         this._updateSelectedItemIndex(index);
       }
     } else {
@@ -315,7 +321,7 @@ export class CdkStepper implements AfterContentInit, AfterViewInit, OnDestroy {
     return this.steps ? this.steps.toArray()[this.selectedIndex] : undefined;
   }
   set selected(step: CdkStep | undefined) {
-    this.selectedIndex = (step && this.steps) ? this.steps.toArray().indexOf(step) : -1;
+    this.selectedIndex = step && this.steps ? this.steps.toArray().indexOf(step) : -1;
   }
 
   /** Event emitted when the selected step has changed. */
@@ -326,7 +332,9 @@ export class CdkStepper implements AfterContentInit, AfterViewInit, OnDestroy {
 
   /** Orientation of the stepper. */
   @Input()
-  get orientation(): StepperOrientation { return this._orientation; }
+  get orientation(): StepperOrientation {
+    return this._orientation;
+  }
   set orientation(value: StepperOrientation) {
     // This is a protected method so that `MatSteppter` can hook into it.
     this._orientation = value;
@@ -343,10 +351,16 @@ export class CdkStepper implements AfterContentInit, AfterViewInit, OnDestroy {
   protected _orientation: StepperOrientation = 'horizontal';
 
   constructor(
-      @Optional() private _dir: Directionality, private _changeDetectorRef: ChangeDetectorRef,
-      private _elementRef: ElementRef<HTMLElement>, @Inject(DOCUMENT) _document: any) {
+    @Optional() private _dir: Directionality,
+    private _changeDetectorRef: ChangeDetectorRef,
+    private _elementRef: ElementRef<HTMLElement>,
+    /**
+     * @deprecated No longer in use, to be removed.
+     * @breaking-change 13.0.0
+     */
+    @Inject(DOCUMENT) _document: any,
+  ) {
     this._groupId = nextId++;
-    this._document = _document;
   }
 
   ngAfterContentInit() {
@@ -359,17 +373,41 @@ export class CdkStepper implements AfterContentInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit() {
+    // If the step headers are defined outside of the `ngFor` that renders the steps, like in the
+    // Material stepper, they won't appear in the `QueryList` in the same order as they're
+    // rendered in the DOM which will lead to incorrect keyboard navigation. We need to sort
+    // them manually to ensure that they're correct. Alternatively, we can change the Material
+    // template to inline the headers in the `ngFor`, but that'll result in a lot of
+    // code duplciation. See #23539.
+    this._stepHeader.changes
+      .pipe(startWith(this._stepHeader), takeUntil(this._destroyed))
+      .subscribe((headers: QueryList<CdkStepHeader>) => {
+        this._sortedHeaders.reset(
+          headers.toArray().sort((a, b) => {
+            const documentPosition = a._elementRef.nativeElement.compareDocumentPosition(
+              b._elementRef.nativeElement,
+            );
+
+            // `compareDocumentPosition` returns a bitmask so we have to use a bitwise operator.
+            // https://developer.mozilla.org/en-US/docs/Web/API/Node/compareDocumentPosition
+            // tslint:disable-next-line:no-bitwise
+            return documentPosition & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+          }),
+        );
+        this._sortedHeaders.notifyOnChanges();
+      });
+
     // Note that while the step headers are content children by default, any components that
     // extend this one might have them as view children. We initialize the keyboard handling in
     // AfterViewInit so we're guaranteed for both view and content children to be defined.
-    this._keyManager = new FocusKeyManager<FocusableOption>(this._stepHeader)
-                           .withWrap()
-                           .withHomeAndEnd()
-                           .withVerticalOrientation(this._orientation === 'vertical');
+    this._keyManager = new FocusKeyManager<FocusableOption>(this._sortedHeaders)
+      .withWrap()
+      .withHomeAndEnd()
+      .withVerticalOrientation(this._orientation === 'vertical');
 
     (this._dir ? (this._dir.change as Observable<Direction>) : observableOf<Direction>())
-        .pipe(startWith(this._layoutDirection()), takeUntil(this._destroyed))
-        .subscribe(direction => this._keyManager.withHorizontalOrientation(direction));
+      .pipe(startWith(this._layoutDirection()), takeUntil(this._destroyed))
+      .subscribe(direction => this._keyManager.withHorizontalOrientation(direction));
 
     this._keyManager.updateActiveItem(this._selectedIndex);
 
@@ -390,6 +428,7 @@ export class CdkStepper implements AfterContentInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     this.steps.destroy();
+    this._sortedHeaders.destroy();
     this._destroyed.next();
     this._destroyed.complete();
   }
@@ -442,8 +481,9 @@ export class CdkStepper implements AfterContentInit, AfterViewInit, OnDestroy {
     const step = this.steps.toArray()[index];
     const isCurrentStep = this._isCurrentStep(index);
 
-    return step._displayDefaultIndicatorType ? this._getDefaultIndicatorLogic(step, isCurrentStep) :
-                                               this._getGuidelineLogic(step, isCurrentStep, state);
+    return step._displayDefaultIndicatorType
+      ? this._getDefaultIndicatorLogic(step, isCurrentStep)
+      : this._getGuidelineLogic(step, isCurrentStep, state);
   }
 
   private _getDefaultIndicatorLogic(step: CdkStep, isCurrentStep: boolean): StepState {
@@ -457,7 +497,10 @@ export class CdkStepper implements AfterContentInit, AfterViewInit, OnDestroy {
   }
 
   private _getGuidelineLogic(
-      step: CdkStep, isCurrentStep: boolean, state: StepState = STEP_STATE.NUMBER): StepState {
+    step: CdkStep,
+    isCurrentStep: boolean,
+    state: StepState = STEP_STATE.NUMBER,
+  ): StepState {
     if (step._showError() && step.hasError && !isCurrentStep) {
       return STEP_STATE.ERROR;
     } else if (step.completed && !isCurrentStep) {
@@ -493,8 +536,9 @@ export class CdkStepper implements AfterContentInit, AfterViewInit, OnDestroy {
     // lost when the active step content is hidden. We can't be more granular with the check
     // (e.g. checking whether focus is inside the active step), because we don't have a
     // reference to the elements that are rendering out the content.
-    this._containsFocus() ? this._keyManager.setActiveItem(newIndex) :
-                            this._keyManager.updateActiveItem(newIndex);
+    this._containsFocus()
+      ? this._keyManager.setActiveItem(newIndex)
+      : this._keyManager.updateActiveItem(newIndex);
 
     this._selectedIndex = newIndex;
     this._stateChanged();
@@ -505,8 +549,11 @@ export class CdkStepper implements AfterContentInit, AfterViewInit, OnDestroy {
     const keyCode = event.keyCode;
     const manager = this._keyManager;
 
-    if (manager.activeItemIndex != null && !hasModifier &&
-        (keyCode === SPACE || keyCode === ENTER)) {
+    if (
+      manager.activeItemIndex != null &&
+      !hasModifier &&
+      (keyCode === SPACE || keyCode === ENTER)
+    ) {
       this.selectedIndex = manager.activeItemIndex;
       event.preventDefault();
     } else {
@@ -516,12 +563,16 @@ export class CdkStepper implements AfterContentInit, AfterViewInit, OnDestroy {
 
   private _anyControlsInvalidOrPending(index: number): boolean {
     if (this._linear && index >= 0) {
-      return this.steps.toArray().slice(0, index).some(step => {
-        const control = step.stepControl;
-        const isIncomplete =
-            control ? (control.invalid || control.pending || !step.interacted) : !step.completed;
-        return isIncomplete && !step.optional && !step._completedOverride;
-      });
+      return this.steps
+        .toArray()
+        .slice(0, index)
+        .some(step => {
+          const control = step.stepControl;
+          const isIncomplete = control
+            ? control.invalid || control.pending || !step.interacted
+            : !step.completed;
+          return isIncomplete && !step.optional && !step._completedOverride;
+        });
     }
 
     return false;
@@ -534,7 +585,7 @@ export class CdkStepper implements AfterContentInit, AfterViewInit, OnDestroy {
   /** Checks whether the stepper contains the focused element. */
   private _containsFocus(): boolean {
     const stepperElement = this._elementRef.nativeElement;
-    const focusedElement = this._document.activeElement;
+    const focusedElement = _getFocusedElementPierceShadowDom();
     return stepperElement === focusedElement || stepperElement.contains(focusedElement);
   }
 
@@ -550,7 +601,6 @@ export class CdkStepper implements AfterContentInit, AfterViewInit, OnDestroy {
   static ngAcceptInputType_linear: BooleanInput;
   static ngAcceptInputType_selectedIndex: NumberInput;
 }
-
 
 /**
  * Simplified representation of an "AbstractControl" from @angular/forms.
@@ -592,12 +642,10 @@ interface AbstractControlLike {
   markAsUntouched(opts?: any): void;
   patchValue(value: any, options?: Object): void;
   reset(value?: any, options?: Object): void;
-  setAsyncValidators(newValidator: (control: any) => any |
-    ((control: any) => any)[] | null): void;
+  setAsyncValidators(newValidator: (control: any) => any | ((control: any) => any)[] | null): void;
   setErrors(errors: {[key: string]: any} | null, opts?: any): void;
   setParent(parent: any): void;
-  setValidators(newValidator: (control: any) => any |
-    ((control: any) => any)[] | null): void;
+  setValidators(newValidator: (control: any) => any | ((control: any) => any)[] | null): void;
   setValue(value: any, options?: Object): void;
   updateValueAndValidity(opts?: any): void;
   patchValue(value: any, options?: any): void;

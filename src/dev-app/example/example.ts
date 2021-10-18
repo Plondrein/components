@@ -8,8 +8,15 @@
 
 import {BooleanInput, coerceBooleanProperty} from '@angular/cdk/coercion';
 import {EXAMPLE_COMPONENTS} from '@angular/components-examples';
-import {loadExampleFactory} from '@angular/components-examples/private';
-import {Component, Injector, Input, OnInit, ViewContainerRef} from '@angular/core';
+import {loadExample} from '@angular/components-examples/private';
+import {
+  ChangeDetectorRef,
+  Component,
+  Injector,
+  Input,
+  OnInit,
+  ViewContainerRef,
+} from '@angular/core';
 
 @Component({
   selector: 'material-example',
@@ -23,7 +30,8 @@ import {Component, Injector, Input, OnInit, ViewContainerRef} from '@angular/cor
       Could not find example {{id}}
     </div>
   `,
-  styles: [`
+  styles: [
+    `
     .label {
       display: flex;
       justify-content: space-between;
@@ -42,25 +50,36 @@ import {Component, Injector, Input, OnInit, ViewContainerRef} from '@angular/cor
       color: #666;
       white-space: pre;
     }
-  `]
+  `,
+  ],
 })
 export class Example implements OnInit {
   /** ID of the material example to display. */
   @Input() id: string;
 
   @Input()
-  get showLabel(): boolean { return this._showLabel; }
-  set showLabel(v: boolean) { this._showLabel = coerceBooleanProperty(v); }
+  get showLabel(): boolean {
+    return this._showLabel;
+  }
+  set showLabel(v: boolean) {
+    this._showLabel = coerceBooleanProperty(v);
+  }
   _showLabel: boolean;
 
   title: string;
 
-  constructor(private _injector: Injector,
-              private _viewContainerRef: ViewContainerRef) {}
+  constructor(
+    private _injector: Injector,
+    private _viewContainerRef: ViewContainerRef,
+    private _changeDetectorRef: ChangeDetectorRef,
+  ) {}
 
   async ngOnInit() {
     this.title = EXAMPLE_COMPONENTS[this.id].title;
-    this._viewContainerRef.createComponent(await loadExampleFactory(this.id, this._injector));
+
+    const example = await loadExample(this.id, this._injector);
+    this._viewContainerRef.createComponent(example.component, {injector: example.injector});
+    this._changeDetectorRef.detectChanges();
   }
 
   static ngAcceptInputType_showLabel: BooleanInput;

@@ -1,6 +1,7 @@
 @use '@material/checkbox' as mdc-checkbox;
 @use '@material/form-field' as mdc-form-field;
 @use '@material/ripple' as mdc-ripple;
+@use '@material/touch-target' as mdc-touch-target;
 @use 'sass:map';
 @use '../../cdk/a11y';
 @use '../mdc-helpers/mdc-helpers';
@@ -84,4 +85,11 @@
   &:not(:empty) {
     transform: translateZ(0);
   }
+}
+
+// Element used to provide a larger tap target for users on touch devices.
+.mat-mdc-checkbox-touch-target {
+  @include mdc-touch-target.touch-target(
+    $set-width: true,
+    $query: mdc-helpers.$mat-base-styles-query);
 }

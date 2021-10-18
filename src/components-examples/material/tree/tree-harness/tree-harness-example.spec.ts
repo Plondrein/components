@@ -15,13 +15,15 @@ describe('TreeHarnessExample', () => {
   let loader: HarnessLoader;
 
   beforeAll(() => {
-    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
+    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), {
+      teardown: {destroyAfterEach: true},
+    });
   });
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MatTreeModule, MatIconModule],
-      declarations: [TreeHarnessExample]
+      declarations: [TreeHarnessExample],
     }).compileComponents();
     fixture = TestBed.createComponent(TreeHarnessExample);
     fixture.detectChanges();
@@ -52,14 +54,11 @@ describe('TreeHarnessExample', () => {
     expect(await secondGroup.isExpanded()).toBe(false);
   });
 
-  it ('should correctly get tree structure', async () => {
+  it('should correctly get tree structure', async () => {
     const tree = await loader.getHarness(MatTreeHarness);
 
     expect(await tree.getTreeStructure()).toEqual({
-      children: [
-        {text: 'Flat Group 1'},
-        {text: 'Flat Group 2'}
-      ]
+      children: [{text: 'Flat Group 1'}, {text: 'Flat Group 2'}],
     });
 
     const firstGroup = (await tree.getNodes({text: /Flat Group 1/}))[0];
@@ -69,14 +68,10 @@ describe('TreeHarnessExample', () => {
       children: [
         {
           text: 'Flat Group 1',
-          children: [
-            {text: 'Flat Leaf 1.1'},
-            {text: 'Flat Leaf 1.2'},
-            {text: 'Flat Leaf 1.3'}
-          ]
+          children: [{text: 'Flat Leaf 1.1'}, {text: 'Flat Leaf 1.2'}, {text: 'Flat Leaf 1.3'}],
         },
-        {text: 'Flat Group 2'}
-      ]
+        {text: 'Flat Group 2'},
+      ],
     });
   });
 });

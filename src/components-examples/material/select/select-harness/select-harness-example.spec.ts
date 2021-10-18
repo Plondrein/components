@@ -15,13 +15,15 @@ describe('SelectHarnessExample', () => {
   let loader: HarnessLoader;
 
   beforeAll(() => {
-    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
+    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), {
+      teardown: {destroyAfterEach: true},
+    });
   });
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MatSelectModule, NoopAnimationsModule],
-      declarations: [SelectHarnessExample]
+      declarations: [SelectHarnessExample],
     }).compileComponents();
     fixture = TestBed.createComponent(SelectHarnessExample);
     fixture.detectChanges();

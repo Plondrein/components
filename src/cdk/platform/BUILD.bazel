@@ -8,10 +8,10 @@ ng_module(
         ["**/*.ts"],
         exclude = ["**/*.spec.ts"],
     ),
-    module_name = "@angular/cdk/platform",
     deps = [
         "@npm//@angular/common",
         "@npm//@angular/core",
+        "@npm//@types/node",
     ],
 )
 

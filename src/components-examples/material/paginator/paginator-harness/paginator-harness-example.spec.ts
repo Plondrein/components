@@ -16,13 +16,15 @@ describe('PaginatorHarnessExample', () => {
   let instance: PaginatorHarnessExample;
 
   beforeAll(() => {
-    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
+    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), {
+      teardown: {destroyAfterEach: true},
+    });
   });
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MatPaginatorModule, NoopAnimationsModule],
-      declarations: [PaginatorHarnessExample]
+      declarations: [PaginatorHarnessExample],
     }).compileComponents();
     fixture = TestBed.createComponent(PaginatorHarnessExample);
     fixture.detectChanges();

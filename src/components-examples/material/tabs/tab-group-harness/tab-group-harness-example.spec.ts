@@ -15,13 +15,15 @@ describe('TabGroupHarnessExample', () => {
   let loader: HarnessLoader;
 
   beforeAll(() => {
-    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
+    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), {
+      teardown: {destroyAfterEach: true},
+    });
   });
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MatTabsModule, NoopAnimationsModule],
-      declarations: [TabGroupHarnessExample]
+      declarations: [TabGroupHarnessExample],
     }).compileComponents();
     fixture = TestBed.createComponent(TabGroupHarnessExample);
     fixture.detectChanges();
@@ -34,9 +36,11 @@ describe('TabGroupHarnessExample', () => {
   });
 
   it('should load harness for tab-group with selected tab label', async () => {
-    const tabGroups = await loader.getAllHarnesses(MatTabGroupHarness.with({
-      selectedTabLabel: 'Profile',
-    }));
+    const tabGroups = await loader.getAllHarnesses(
+      MatTabGroupHarness.with({
+        selectedTabLabel: 'Profile',
+      }),
+    );
     expect(tabGroups.length).toBe(1);
   });
 

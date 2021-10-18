@@ -16,13 +16,15 @@ describe('InputHarnessExample', () => {
   let loader: HarnessLoader;
 
   beforeAll(() => {
-    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
+    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), {
+      teardown: {destroyAfterEach: true},
+    });
   });
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MatInputModule, NoopAnimationsModule, ReactiveFormsModule],
-      declarations: [InputHarnessExample]
+      declarations: [InputHarnessExample],
     }).compileComponents();
     fixture = TestBed.createComponent(InputHarnessExample);
     fixture.detectChanges();

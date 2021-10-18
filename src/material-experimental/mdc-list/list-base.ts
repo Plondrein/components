@@ -19,7 +19,7 @@ import {
   NgZone,
   OnDestroy,
   Optional,
-  QueryList
+  QueryList,
 } from '@angular/core';
 import {
   MAT_RIPPLE_GLOBAL_OPTIONS,
@@ -29,7 +29,7 @@ import {
   RippleTarget,
   setLines,
 } from '@angular/material-experimental/mdc-core';
-import {numbers} from '@material/ripple';
+import {ANIMATION_MODULE_TYPE} from '@angular/platform-browser/animations';
 import {Subscription} from 'rxjs';
 import {startWith} from 'rxjs/operators';
 import {MatListAvatarCssMatStyler, MatListIconCssMatStyler} from './list-styling';
@@ -54,27 +54,37 @@ export abstract class MatListItemBase implements AfterContentInit, OnDestroy, Ri
   /** Host element for the list item. */
   _hostElement: HTMLElement;
 
+  /** Whether animations are disabled. */
+  _noopAnimations: boolean;
+
   @ContentChildren(MatListAvatarCssMatStyler, {descendants: false}) _avatars: QueryList<never>;
   @ContentChildren(MatListIconCssMatStyler, {descendants: false}) _icons: QueryList<never>;
 
   @Input()
   get disableRipple(): boolean {
-    return this.disabled || this._disableRipple || this._listBase.disableRipple;
+    return (
+      this.disabled || this._disableRipple || this._listBase.disableRipple || this._noopAnimations
+    );
   }
-  set disableRipple(value: boolean) { this._disableRipple = coerceBooleanProperty(value); }
+  set disableRipple(value: boolean) {
+    this._disableRipple = coerceBooleanProperty(value);
+  }
   private _disableRipple: boolean = false;
 
   /** Whether the list-item is disabled. */
-  @HostBinding('class.mdc-deprecated-list-item--disabled')
   @HostBinding('class.mdc-list-item--disabled')
   @HostBinding('attr.aria-disabled')
   @Input()
-  get disabled(): boolean { return this._disabled || (this._listBase && this._listBase.disabled); }
-  set disabled(value: boolean) { this._disabled = coerceBooleanProperty(value); }
+  get disabled(): boolean {
+    return this._disabled || (this._listBase && this._listBase.disabled);
+  }
+  set disabled(value: boolean) {
+    this._disabled = coerceBooleanProperty(value);
+  }
   private _disabled = false;
 
   private _subscriptions = new Subscription();
-  private _rippleRenderer: RippleRenderer|null = null;
+  private _rippleRenderer: RippleRenderer | null = null;
 
   /**
    * Implemented as part of `RippleTarget`.
@@ -86,24 +96,23 @@ export abstract class MatListItemBase implements AfterContentInit, OnDestroy, Ri
    * Implemented as part of `RippleTarget`.
    * @docs-private
    */
-  get rippleDisabled(): boolean { return this.disableRipple || !!this.rippleConfig.disabled; }
+  get rippleDisabled(): boolean {
+    return this.disableRipple || !!this.rippleConfig.disabled;
+  }
 
-  constructor(public _elementRef: ElementRef<HTMLElement>, protected _ngZone: NgZone,
-              private _listBase: MatListBase, private _platform: Platform,
-              @Optional() @Inject(MAT_RIPPLE_GLOBAL_OPTIONS)
-                  globalRippleOptions?: RippleGlobalOptions) {
-    // We have to clone the object, because we don't want to mutate a global value when we assign
-    // the `animation` further down. The downside of doing this is that the ripple renderer won't
-    // pick up dynamic changes to `disabled`, but it's not something we officially support.
-    this.rippleConfig = {...(globalRippleOptions || {})};
+  constructor(
+    public _elementRef: ElementRef<HTMLElement>,
+    protected _ngZone: NgZone,
+    private _listBase: MatListBase,
+    private _platform: Platform,
+    @Optional()
+    @Inject(MAT_RIPPLE_GLOBAL_OPTIONS)
+    globalRippleOptions?: RippleGlobalOptions,
+    @Optional() @Inject(ANIMATION_MODULE_TYPE) animationMode?: string,
+  ) {
+    this.rippleConfig = globalRippleOptions || {};
     this._hostElement = this._elementRef.nativeElement;
-
-    if (!this.rippleConfig.animation) {
-      this.rippleConfig.animation = {
-        enterDuration: numbers.DEACTIVATION_TIMEOUT_MS,
-        exitDuration: numbers.FG_DEACTIVATION_MS
-      };
-    }
+    this._noopAnimations = animationMode === 'NoopAnimations';
 
     if (!this._listBase._isNonInteractive) {
       this._initInteractiveListItem();
@@ -112,8 +121,10 @@ export abstract class MatListItemBase implements AfterContentInit, OnDestroy, Ri
     // If no type attribute is specified for a host `<button>` element, set it to `button`. If a
     // type attribute is already specified, we do nothing. We do this for backwards compatibility.
     // TODO: Determine if we intend to continue doing this for the MDC-based list.
-    if (this._hostElement.nodeName.toLowerCase() === 'button' &&
-        !this._hostElement.hasAttribute('type')) {
+    if (
+      this._hostElement.nodeName.toLowerCase() === 'button' &&
+      !this._hostElement.hasAttribute('type')
+    ) {
       this._hostElement.setAttribute('type', 'button');
     }
   }
@@ -131,7 +142,7 @@ export abstract class MatListItemBase implements AfterContentInit, OnDestroy, Ri
 
   /** Gets the label for the list item. This is used for the typeahead. */
   _getItemLabel(): string {
-    return this._itemText ? (this._itemText.nativeElement.textContent || '') : '';
+    return this._itemText ? this._itemText.nativeElement.textContent || '' : '';
   }
 
   /** Whether the list item has icons or avatars. */
@@ -141,8 +152,12 @@ export abstract class MatListItemBase implements AfterContentInit, OnDestroy, Ri
 
   private _initInteractiveListItem() {
     this._hostElement.classList.add('mat-mdc-list-item-interactive');
-    this._rippleRenderer =
-        new RippleRenderer(this, this._ngZone, this._hostElement, this._platform);
+    this._rippleRenderer = new RippleRenderer(
+      this,
+      this._ngZone,
+      this._hostElement,
+      this._platform,
+    );
     this._rippleRenderer.setupTriggerEvents(this._hostElement);
   }
 
@@ -152,17 +167,26 @@ export abstract class MatListItemBase implements AfterContentInit, OnDestroy, Ri
    */
   private _monitorLines() {
     this._ngZone.runOutsideAngular(() => {
-      this._subscriptions.add(this.lines.changes.pipe(startWith(this.lines))
+      this._subscriptions.add(
+        this.lines.changes
+          .pipe(startWith(this.lines))
           .subscribe((lines: QueryList<ElementRef<Element>>) => {
             toggleClass(this._hostElement, 'mat-mdc-list-item-single-line', lines.length <= 1);
+            toggleClass(this._hostElement, 'mdc-list-item--with-one-line', lines.length <= 1);
+
             lines.forEach((line: ElementRef<Element>, index: number) => {
-              toggleClass(line.nativeElement,
-                  'mdc-deprecated-list-item__primary-text', index === 0 && lines.length > 1);
+              toggleClass(this._hostElement, 'mdc-list-item--with-two-lines', lines.length === 2);
+              toggleClass(this._hostElement, 'mdc-list-item--with-three-lines', lines.length === 3);
               toggleClass(
-                  line.nativeElement, 'mdc-deprecated-list-item__secondary-text', index !== 0);
+                line.nativeElement,
+                'mdc-list-item__primary-text',
+                index === 0 && lines.length > 1,
+              );
+              toggleClass(line.nativeElement, 'mdc-list-item__secondary-text', index !== 0);
             });
             setLines(lines, this._elementRef, 'mat-mdc');
-          }));
+          }),
+      );
     });
   }
 
@@ -178,15 +202,23 @@ export abstract class MatListBase {
 
   /** Whether ripples for all list items is disabled. */
   @Input()
-  get disableRipple(): boolean { return this._disableRipple; }
-  set disableRipple(value: boolean) { this._disableRipple = coerceBooleanProperty(value); }
+  get disableRipple(): boolean {
+    return this._disableRipple;
+  }
+  set disableRipple(value: boolean) {
+    this._disableRipple = coerceBooleanProperty(value);
+  }
   private _disableRipple: boolean = false;
 
   /** Whether all list items are disabled. */
   @HostBinding('attr.aria-disabled')
   @Input()
-  get disabled(): boolean { return this._disabled; }
-  set disabled(value: boolean) { this._disabled = coerceBooleanProperty(value); }
+  get disabled(): boolean {
+    return this._disabled;
+  }
+  set disabled(value: boolean) {
+    this._disabled = coerceBooleanProperty(value);
+  }
   private _disabled = false;
 
   static ngAcceptInputType_disabled: BooleanInput;

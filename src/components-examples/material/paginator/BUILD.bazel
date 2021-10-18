@@ -12,10 +12,10 @@ ng_module(
         "**/*.html",
         "**/*.css",
     ]),
-    module_name = "@angular/components-examples/material/paginator",
     deps = [
         "//src/cdk/testing",
         "//src/cdk/testing/testbed",
+        "//src/components-examples/private:localize_types",
         "//src/material/input",
         "//src/material/paginator",
         "//src/material/paginator/testing",

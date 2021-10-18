@@ -13,9 +13,11 @@ import {
   InjectionToken,
   Input,
   ViewEncapsulation,
-  Directive, Inject, Optional
+  Directive,
+  Inject,
+  Optional,
 } from '@angular/core';
-import {CanDisable, CanDisableCtor, mixinDisabled} from '../common-behaviors/disabled';
+import {CanDisable, mixinDisabled} from '../common-behaviors/disabled';
 import {MatOptionParentComponent, MAT_OPTION_PARENT_COMPONENT} from './option-parent';
 
 // Notes on the accessibility pattern used for `mat-optgroup`.
@@ -40,9 +42,7 @@ import {MatOptionParentComponent, MAT_OPTION_PARENT_COMPONENT} from './option-pa
 
 // Boilerplate for applying mixins to MatOptgroup.
 /** @docs-private */
-class MatOptgroupBase { }
-const _MatOptgroupMixinBase: CanDisableCtor & typeof MatOptgroupBase =
-    mixinDisabled(MatOptgroupBase);
+const _MatOptgroupMixinBase = mixinDisabled(class {});
 
 // Counter for unique group ids.
 let _uniqueOptgroupIdCounter = 0;
@@ -93,5 +93,4 @@ export const MAT_OPTGROUP = new InjectionToken<MatOptgroup>('MatOptgroup');
   },
   providers: [{provide: MAT_OPTGROUP, useExisting: MatOptgroup}],
 })
-export class MatOptgroup extends _MatOptgroupBase {
-}
+export class MatOptgroup extends _MatOptgroupBase {}

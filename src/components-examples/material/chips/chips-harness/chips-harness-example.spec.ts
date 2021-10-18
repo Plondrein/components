@@ -15,13 +15,15 @@ describe('ChipsHarnessExample', () => {
   let loader: HarnessLoader;
 
   beforeAll(() => {
-    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
+    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), {
+      teardown: {destroyAfterEach: true},
+    });
   });
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MatChipsModule, NoopAnimationsModule],
-      declarations: [ChipsHarnessExample]
+      declarations: [ChipsHarnessExample],
     }).compileComponents();
     fixture = TestBed.createComponent(ChipsHarnessExample);
     fixture.detectChanges();

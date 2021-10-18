@@ -45,28 +45,29 @@ export class MatColumnResizeOverlayHandle extends ResizeOverlayHandle {
   protected readonly document: Document;
 
   constructor(
-      protected readonly columnDef: CdkColumnDef,
-      protected readonly columnResize: ColumnResize,
-      protected readonly directionality: Directionality,
-      protected readonly elementRef: ElementRef,
-      protected readonly eventDispatcher: HeaderRowEventDispatcher,
-      protected readonly ngZone: NgZone,
-      protected readonly resizeNotifier: ColumnResizeNotifierSource,
-      protected readonly resizeRef: ResizeRef,
-      @Inject(_COALESCED_STYLE_SCHEDULER)
-          protected readonly styleScheduler: _CoalescedStyleScheduler,
-      @Inject(DOCUMENT) document: any) {
+    protected readonly columnDef: CdkColumnDef,
+    protected readonly columnResize: ColumnResize,
+    protected readonly directionality: Directionality,
+    protected readonly elementRef: ElementRef,
+    protected readonly eventDispatcher: HeaderRowEventDispatcher,
+    protected readonly ngZone: NgZone,
+    protected readonly resizeNotifier: ColumnResizeNotifierSource,
+    protected readonly resizeRef: ResizeRef,
+    @Inject(_COALESCED_STYLE_SCHEDULER)
+    protected readonly styleScheduler: _CoalescedStyleScheduler,
+    @Inject(DOCUMENT) document: any,
+  ) {
     super();
     this.document = document;
   }
 
-  protected updateResizeActive(active: boolean): void {
+  protected override updateResizeActive(active: boolean): void {
     super.updateResizeActive(active);
 
     this.resizeRef.overlayRef.updateSize({
-      height: active ?
-          (this.columnResize as AbstractMatColumnResize).getTableHeight() :
-          this.resizeRef.origin.nativeElement!.offsetHeight
+      height: active
+        ? (this.columnResize as AbstractMatColumnResize).getTableHeight()
+        : this.resizeRef.origin.nativeElement!.offsetHeight,
     });
   }
 }

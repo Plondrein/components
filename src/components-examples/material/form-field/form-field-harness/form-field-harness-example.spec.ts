@@ -18,13 +18,15 @@ describe('FormFieldHarnessExample', () => {
   let loader: HarnessLoader;
 
   beforeAll(() => {
-    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
+    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), {
+      teardown: {destroyAfterEach: true},
+    });
   });
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MatFormFieldModule, MatInputModule, ReactiveFormsModule, NoopAnimationsModule],
-      declarations: [FormFieldHarnessExample]
+      declarations: [FormFieldHarnessExample],
     }).compileComponents();
     fixture = TestBed.createComponent(FormFieldHarnessExample);
     fixture.detectChanges();
@@ -38,7 +40,7 @@ describe('FormFieldHarnessExample', () => {
 
   it('should be able to get control of form-field', async () => {
     const formField = await loader.getHarness(MatFormFieldHarness);
-    expect(await formField.getControl() instanceof MatInputHarness).toBe(true);
+    expect((await formField.getControl()) instanceof MatInputHarness).toBe(true);
   });
 
   it('should be able to get error messages and hints of form-field', async () => {
@@ -47,7 +49,7 @@ describe('FormFieldHarnessExample', () => {
     expect(await formField.getTextHints()).toEqual(['Hint']);
 
     fixture.componentInstance.requiredControl.setValue('');
-    await ((await formField.getControl() as MatInputHarness))?.blur();
+    await ((await formField.getControl()) as MatInputHarness)?.blur();
     expect(await formField.getTextErrors()).toEqual(['Error']);
     expect(await formField.getTextHints()).toEqual([]);
   });

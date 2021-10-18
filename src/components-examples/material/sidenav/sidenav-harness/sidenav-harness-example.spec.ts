@@ -3,7 +3,8 @@ import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
 import {
   MatDrawerHarness,
   MatDrawerContainerHarness,
-  MatDrawerContentHarness} from '@angular/material/sidenav/testing';
+  MatDrawerContentHarness,
+} from '@angular/material/sidenav/testing';
 import {HarnessLoader} from '@angular/cdk/testing';
 import {
   BrowserDynamicTestingModule,
@@ -18,13 +19,15 @@ describe('SidenavHarnessExample', () => {
   let loader: HarnessLoader;
 
   beforeAll(() => {
-    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
+    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), {
+      teardown: {destroyAfterEach: true},
+    });
   });
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MatSidenavModule, NoopAnimationsModule],
-      declarations: [SidenavHarnessExample]
+      declarations: [SidenavHarnessExample],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SidenavHarnessExample);

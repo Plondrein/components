@@ -14,13 +14,15 @@ describe('ProgressBarHarnessExample', () => {
   let loader: HarnessLoader;
 
   beforeAll(() => {
-    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
+    TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting(), {
+      teardown: {destroyAfterEach: true},
+    });
   });
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MatProgressBarModule],
-      declarations: [ProgressBarHarnessExample]
+      declarations: [ProgressBarHarnessExample],
     }).compileComponents();
     fixture = TestBed.createComponent(ProgressBarHarnessExample);
     fixture.detectChanges();
